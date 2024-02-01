@@ -4,21 +4,30 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Vanilla App Template</title>
+    <title>Hw-12</title>
     <link rel="stylesheet" href="./css/styles.css" />
   </head>
-  <body>
-    <load ="partials/header.html" />
-
-    <section>
-      <h1>Lorem ipsum dolor sit amet.</h1>
-      <!-- Path to images as from index.html file -->
-      <img src="./img/javascript.svg" alt="" />
-    </section>
-
-    <!-- Loads the specified .html file -->
-    <load ="partials/vite-promo.html" />
-
+  <body class="body">
+    <form class="form js-form">
+      <input class="input-search" name="search" type="text" />
+      <button class="btn-search" type="submit">Search</button>
+    </form>
+    <div class="loader"></div>
+    <div class="gallery">
+      <ul class="gallery-list"></ul>
+    </div>
+    <button class="btn-search load-more">Load more</button>
+    <button class="btn-up">
+      <svg class="icon icon-arrow-up2">
+        <use xlink:href="#icon-arrow-up2">
+          <symbol id="icon-arrow-up2" viewBox="0 0 32 32">
+            <path
+              d="M27.414 12.586l-10-10c-0.781-0.781-2.047-0.781-2.828 0l-10 10c-0.781 0.781-0.781 2.047 0 2.828s2.047 0.781 2.828 0l6.586-6.586v19.172c0 1.105 0.895 2 2 2s2-0.895 2-2v-19.172l6.586 6.586c0.39 0.39 0.902 0.586 1.414 0.586s1.024-0.195 1.414-0.586c0.781-0.781 0.781-2.047 0-2.828z"
+            ></path>
+          </symbol>
+        </use>
+      </svg>
+    </button>
     <script type="module" src="./main.js"></script>
   </body>
 </html>
