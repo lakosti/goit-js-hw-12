@@ -38,7 +38,7 @@ async function handleSearch(evt) {
   evt.preventDefault();
 
   const form = evt.currentTarget;
-  const searchWord = form.elements.search.value.trim();
+  searchWord = form.elements.search.value.trim();
   currentPage = 1;
 
   refs.list.innerHTML = '';
