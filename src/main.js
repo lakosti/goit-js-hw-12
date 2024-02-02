@@ -92,9 +92,8 @@ async function handleLoad() {
   currentPage += 1;
   refs.loaderMore.style.display = 'block';
   refs.loadMore.style.display = 'none';
-  const imgHeight = document
-    .querySelector('.gallery-item')
-    .getBoundingClientRect();
+  const getHeightImgCard = () =>
+    document.querySelector('.gallery-item').getBoundingClientRect();
   try {
     const data = await searchPhotoByName(searchWord, currentPage);
     const arr = data.hits;
@@ -103,7 +102,7 @@ async function handleLoad() {
     console.log(err);
   } finally {
     window.scrollBy({
-      top: imgHeight.height * 2,
+      top: getHeightImgCard().height * 2,
       left: 0,
       behavior: 'smooth',
     });
@@ -123,7 +122,7 @@ async function handleLoad() {
   }
 }
 
-async function searchPhotoByName(searchWord) {
+async function searchPhotoByName(searchWord, currentPage) {
   try {
     const resp = await axios.get(`${BASE_URL}/`, {
       params: {
@@ -133,7 +132,7 @@ async function searchPhotoByName(searchWord) {
         orientation: 'horizontal',
         safesearch: true,
         per_page: perPage,
-        page: 1,
+        page: currentPage,
       },
     });
     return resp.data;
