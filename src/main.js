@@ -1,20 +1,31 @@
 import iziToast from 'izitoast';
 import 'izitoast/dist/css/iziToast.min.css';
-
+import axios from 'axios';
 import SimpleLightbox from 'simplelightbox';
 import 'simplelightbox/dist/simple-lightbox.min.css';
 
 const BASE_URL = 'https://pixabay.com/api/';
 const API_KEY = '42030111-51447223cbabab8b20d1b63f9';
+let currentPage = 1;
+let searchWord = '';
+const perPage = 15;
 
 const refs = {
   form: document.querySelector('.form'),
   list: document.querySelector('.gallery-list'),
   loader: document.querySelector('.loader'),
+  loaderMore: document.querySelector('.loader-more'),
+  btnUp: document.querySelector('.up-btn'),
+  loadMore: document.querySelector('.load-more'),
 };
 
-refs.form.addEventListener('submit', handleSearch);
 refs.loader.style.display = 'none';
+refs.loaderMore.style.display = 'none';
+refs.loadMore.style.display = 'none';
+refs.btnUp.style.display = 'none';
+
+refs.form.addEventListener('submit', handleSearch);
+refs.loadMore.addEventListener('click', handleLoad);
 
 const simplelightbox = new SimpleLightbox('.gallery a', {
   captions: true,
@@ -26,10 +37,13 @@ function handleSearch(evt) {
   evt.preventDefault();
 
   const form = evt.currentTarget;
-  const searchWord = form.elements.search.value;
+  const searchWord = form.elements.search.value.trim();
 
-  refs.loader.style.display = 'block';
+  currentPage = 1;
   refs.list.innerHTML = '';
+  refs.loader.style.display = 'block';
+  refs.loadMore.style.display = 'none';
+  refs.loaderMore.style.display = 'none';
 
   if (!searchWord) {
     iziToast.error({
@@ -39,7 +53,7 @@ function handleSearch(evt) {
     refs.loader.style.display = 'none';
     return;
   }
-  searchPhotoByName(searchWord)
+  searchPhotoByName(searchWord, currentPage)
     .then(data => {
       const arr = data.hits;
       if (!arr.length) {
@@ -50,8 +64,16 @@ function handleSearch(evt) {
         });
         return;
       }
+      const totalPages = Math.ceil(data.totalHits / perPage);
 
-      refs.list.innerHTML = createMarkup(arr);
+      if (currentPage === totalPages) {
+        refs.loaderMore.style.display = 'none';
+        refs.loadMore.style.display = 'block';
+      } else {
+        refs.loadMore.style.display = 'block';
+      }
+
+      refs.list.insertAdjacentHTML('beforeend', createMarkup(arr));
       simplelightbox.refresh();
     })
     .catch(err => {
@@ -66,6 +88,36 @@ function handleSearch(evt) {
     });
 }
 
+function handleLoad() {
+  currentPage += 1;
+
+  refs.loaderMore.style.display = 'block';
+  refs.loadMore.style.display = 'none';
+
+  searchPhotoByName(searchWord, currentPage)
+    .then(data => {
+      const arr = data.hits;
+      refs.list.insertAdjacentHTML('beforeend', createMarkup(arr));
+      simplelightbox.refresh();
+
+      const totalPages = Math.ceil(data.totalHits / perPage);
+
+      if (currentPage === totalPages) {
+        iziToast.info({
+          title: 'Caution',
+          message: `We're sorry, but you've reached the end of search results.`,
+        });
+        refs.loadMore.style.display = 'none';
+        refs.loaderMore.style.display = 'none';
+      }
+      refs.loaderMore.style.display = 'none';
+      refs.loadMore.style.display = 'block';
+
+      return;
+    })
+    .catch(err => console.log(err));
+}
+
 function searchPhotoByName(searchWord) {
   const urlParams = new URLSearchParams({
     key: API_KEY,
@@ -73,6 +125,8 @@ function searchPhotoByName(searchWord) {
     image_type: 'photo',
     orientation: 'horizontal',
     safesearch: true,
+    per_page: perPage,
+    page: 1,
   });
 
   return fetch(`${BASE_URL}?${urlParams}`).then(resp => {
