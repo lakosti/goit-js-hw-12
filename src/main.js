@@ -67,9 +67,9 @@ async function handleSearch(evt) {
     }
     const totalPages = Math.ceil(data.totalHits / perPage);
 
-    if (currentPage === totalPages) {
+    if (data.totalHits === totalPages) {
       refs.loaderMore.style.display = 'none';
-      refs.loadMore.style.display = 'block';
+      refs.loadMore.style.display = 'none';
     } else {
       refs.loadMore.style.display = 'block';
     }
@@ -108,10 +108,9 @@ async function handleLoad() {
     });
     simplelightbox.refresh();
     const totalPages = Math.ceil(data.totalHits / perPage);
-
-    if (currentPage === totalPages) {
+    if (data.totalHits === totalPages) {
       iziToast.info({
-        title: 'Caution',
+        title: 'Warning',
         message: `We're sorry, but you've reached the end of search results.`,
       });
       refs.loadMore.style.display = 'none';
