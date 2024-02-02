@@ -88,16 +88,37 @@ async function handleSearch(evt) {
 }
 
 async function handleLoad() {
-  let data = '';
   currentPage += 1;
+
   refs.loaderMore.style.display = 'block';
   refs.loadMore.style.display = 'none';
+
   const getHeightImgCard = () =>
     document.querySelector('.gallery-item').getBoundingClientRect();
   try {
     const data = await searchPhotoByName(searchWord, currentPage);
     const arr = data.hits;
-    refs.list.insertAdjacentHTML('beforeend', createMarkup(arr));
+
+    if (arr.length === 0) {
+      iziToast.info({
+        title: 'Warning',
+        message: `We're sorry, but you've reached the end of search results.`,
+      });
+    } else {
+      refs.list.insertAdjacentHTML('beforeend', createMarkup(arr));
+      simplelightbox.refresh();
+
+      const totalPages = Math.ceil(data.totalHits / perPage);
+      if (currentPage >= totalPages) {
+        iziToast.info({
+          title: 'Warning',
+          message: `We're sorry, but you've reached the end of search results.`,
+        });
+        refs.loadMore.style.display = 'none';
+      } else {
+        refs.loadMore.style.display = 'block';
+      }
+    }
   } catch (err) {
     console.log(err);
   } finally {
@@ -106,18 +127,7 @@ async function handleLoad() {
       left: 0,
       behavior: 'smooth',
     });
-    simplelightbox.refresh();
-    const totalPages = Math.ceil(data.totalHits / perPage);
-    if (data.totalHits === totalPages) {
-      iziToast.info({
-        title: 'Warning',
-        message: `We're sorry, but you've reached the end of search results.`,
-      });
-      refs.loadMore.style.display = 'none';
-      refs.loaderMore.style.display = 'none';
-    }
     refs.loaderMore.style.display = 'none';
-    refs.loadMore.style.display = 'block';
   }
 }
 
