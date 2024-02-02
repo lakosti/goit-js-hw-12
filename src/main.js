@@ -6,6 +6,7 @@ import 'simplelightbox/dist/simple-lightbox.min.css';
 
 const BASE_URL = 'https://pixabay.com/api/';
 const API_KEY = '42030111-51447223cbabab8b20d1b63f9';
+
 let currentPage = 1;
 let searchWord = '';
 const perPage = 15;
@@ -33,13 +34,13 @@ const simplelightbox = new SimpleLightbox('.gallery a', {
   captionDelay: 250,
 });
 
-function handleSearch(evt) {
+async function handleSearch(evt) {
   evt.preventDefault();
 
   const form = evt.currentTarget;
   const searchWord = form.elements.search.value.trim();
-
   currentPage = 1;
+
   refs.list.innerHTML = '';
   refs.loader.style.display = 'block';
   refs.loadMore.style.display = 'none';
@@ -53,88 +54,95 @@ function handleSearch(evt) {
     refs.loader.style.display = 'none';
     return;
   }
-  searchPhotoByName(searchWord, currentPage)
-    .then(data => {
-      const arr = data.hits;
-      if (!arr.length) {
-        iziToast.error({
-          title: 'Error',
-          message:
-            'Sorry, there are no images matching your search query. Please try again!',
-        });
-        return;
-      }
-      const totalPages = Math.ceil(data.totalHits / perPage);
-
-      if (currentPage === totalPages) {
-        refs.loaderMore.style.display = 'none';
-        refs.loadMore.style.display = 'block';
-      } else {
-        refs.loadMore.style.display = 'block';
-      }
-
-      refs.list.insertAdjacentHTML('beforeend', createMarkup(arr));
-      simplelightbox.refresh();
-    })
-    .catch(err => {
+  try {
+    const data = await searchPhotoByName(searchWord, currentPage);
+    const arr = data.hits;
+    if (!arr.length) {
       iziToast.error({
         title: 'Error',
-        message: `${err}`,
+        message:
+          'Sorry, there are no images matching your search query. Please try again!',
       });
-    })
-    .finally(() => {
-      form.reset();
-      refs.loader.style.display = 'none';
-    });
-}
+      return;
+    }
+    const totalPages = Math.ceil(data.totalHits / perPage);
 
-function handleLoad() {
-  currentPage += 1;
-
-  refs.loaderMore.style.display = 'block';
-  refs.loadMore.style.display = 'none';
-
-  searchPhotoByName(searchWord, currentPage)
-    .then(data => {
-      const arr = data.hits;
-      refs.list.insertAdjacentHTML('beforeend', createMarkup(arr));
-      simplelightbox.refresh();
-
-      const totalPages = Math.ceil(data.totalHits / perPage);
-
-      if (currentPage === totalPages) {
-        iziToast.info({
-          title: 'Caution',
-          message: `We're sorry, but you've reached the end of search results.`,
-        });
-        refs.loadMore.style.display = 'none';
-        refs.loaderMore.style.display = 'none';
-      }
+    if (currentPage === totalPages) {
       refs.loaderMore.style.display = 'none';
       refs.loadMore.style.display = 'block';
+    } else {
+      refs.loadMore.style.display = 'block';
+    }
 
-      return;
-    })
-    .catch(err => console.log(err));
+    refs.list.insertAdjacentHTML('beforeend', createMarkup(arr));
+    simplelightbox.refresh();
+  } catch (err) {
+    iziToast.error({
+      title: 'Error',
+      message: `${err}`,
+    });
+  } finally {
+    form.reset();
+    refs.loader.style.display = 'none';
+  }
 }
 
-function searchPhotoByName(searchWord) {
-  const urlParams = new URLSearchParams({
-    key: API_KEY,
-    q: searchWord,
-    image_type: 'photo',
-    orientation: 'horizontal',
-    safesearch: true,
-    per_page: perPage,
-    page: 1,
-  });
+async function handleLoad() {
+  let data = '';
+  currentPage += 1;
+  refs.loaderMore.style.display = 'block';
+  refs.loadMore.style.display = 'none';
+  const imgHeight = document
+    .querySelector('.gallery-item')
+    .getBoundingClientRect();
+  try {
+    const data = await searchPhotoByName(searchWord, currentPage);
+    const arr = data.hits;
+    refs.list.insertAdjacentHTML('beforeend', createMarkup(arr));
+  } catch (err) {
+    console.log(err);
+  } finally {
+    window.scrollBy({
+      top: imgHeight.height * 2,
+      left: 0,
+      behavior: 'smooth',
+    });
+    simplelightbox.refresh();
+    const totalPages = Math.ceil(data.totalHits / perPage);
 
-  return fetch(`${BASE_URL}?${urlParams}`).then(resp => {
-    if (!resp.ok) {
-      throw new Error(resp.statusText);
+    if (currentPage === totalPages) {
+      iziToast.info({
+        title: 'Caution',
+        message: `We're sorry, but you've reached the end of search results.`,
+      });
+      refs.loadMore.style.display = 'none';
+      refs.loaderMore.style.display = 'none';
     }
-    return resp.json();
-  });
+    refs.loaderMore.style.display = 'none';
+    refs.loadMore.style.display = 'block';
+  }
+}
+
+async function searchPhotoByName(searchWord) {
+  try {
+    const resp = await axios.get(`${BASE_URL}/`, {
+      params: {
+        key: API_KEY,
+        q: searchWord,
+        image_type: 'photo',
+        orientation: 'horizontal',
+        safesearch: true,
+        per_page: perPage,
+        page: 1,
+      },
+    });
+    return resp.data;
+  } catch {
+    iziToast.error({
+      title: 'Error',
+      message: 'Something happend. Try later',
+    });
+  }
 }
 
 function createMarkup(arr) {
