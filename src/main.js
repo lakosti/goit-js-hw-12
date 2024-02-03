@@ -73,7 +73,13 @@ async function handleSearch(evt) {
     } else {
       refs.loadMore.style.display = 'block';
     }
-
+    if (arr.length < perPage) {
+      refs.loadMore.style.display = 'none';
+      iziToast.info({
+        title: 'Warning',
+        message: `We're sorry, but you've reached the end of search results.`,
+      });
+    }
     refs.list.insertAdjacentHTML('beforeend', createMarkup(arr));
     simplelightbox.refresh();
   } catch (err) {
