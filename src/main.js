@@ -126,7 +126,10 @@ async function handleLoad() {
       }
     }
   } catch (err) {
-    console.log(err);
+    iziToast.error({
+      title: 'Error',
+      message: `${err}`,
+    });
   } finally {
     window.scrollBy({
       top: getHeightImgCard().height * 2,
